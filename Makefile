@@ -134,6 +134,7 @@ endif
 # C sources
 C_SOURCES =  \
 $(SYS) \
+Core/Src/init.c \
 Core/Src/main.c \
 
 # ASM sources
@@ -210,14 +211,11 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = $(LD) -Wl,--no-warn-rwx-segment # "-Wl,--no-warn-rwx-segment" - отключает вывод предупреждения о том,
-#										   # что .elf содержит сегмент LOAD с правами RWX (Read, Write, X)
-#										   # Нужно разбораться с этой проблемой  
-#										   #
+LDSCRIPT = $(LD)
 # libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET_SERIES)$(TARGET_VERSION).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET_SERIES)$(TARGET_VERSION).map,--cref -Wl,--gc-sections -Wl,--no-warn-rwx-segment
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET_SERIES)$(TARGET_VERSION).elf $(BUILD_DIR)/$(TARGET_SERIES)$(TARGET_VERSION).hex $(BUILD_DIR)/$(TARGET_SERIES)$(TARGET_VERSION).bin 
