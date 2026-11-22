@@ -1,6 +1,19 @@
 #include "registers.h"
 
-#define LED_COUNT             6U
+#define LED_COUNT                 6U
+#define GPIO_CLOCK_ENABLE_MASK    0x38UL
+
+#define GPIOD_LED_FIELDS_MASK     0x00003F00UL
+#define GPIOD_LED_OUTPUT_MODE     0x00001500UL
+#define GPIOE_LED_FIELDS_MASK     0x00000FC0UL
+#define GPIOE_LED_OUTPUT_MODE     0x00000540UL
+
+#define GPIOF_BUTTON_FIELDS_MASK  0x0000F000UL
+#define GPIOF_BUTTON_PULLUP       0x00005000UL
+
+#define SYSTICK_TICK_RATE_HZ      1000UL
+#define SYSTICK_CONTROL_VALUE     0x05UL
+#define SYSTICK_COUNTFLAG_MASK    (1UL << 16)
 #define BUTTON1_MASK          (1UL << 6)
 #define BUTTON2_MASK          (1UL << 7)
 #define DEBOUNCE_TIME_MS      20U
@@ -12,14 +25,14 @@ extern uint32_t SystemCoreClock;
 
 static void initSysTick(void)
 {
-    SYST_RVR = (SystemCoreClock / 1000UL) - 1UL;
+    SYST_RVR = (SystemCoreClock / SYSTICK_TICK_RATE_HZ) - 1UL;
     SYST_CVR = 0UL;
-    SYST_CSR = 0x05UL;
+    SYST_CSR = SYSTICK_CONTROL_VALUE;
 }
 
 static void delay1ms(void)
 {
-    while ((SYST_CSR & (1UL << 16)) == 0UL)
+    while ((SYST_CSR & SYSTICK_COUNTFLAG_MASK) == 0UL)
     {
     }
 }
@@ -29,7 +42,7 @@ static void initGPIO(void)
     uint32_t clockStatus;
 
     /* Включаем тактирование портов D, E и F */
-    RCC_AHB1ENR |= 0x38UL;
+    RCC_AHB1ENR |= GPIO_CLOCK_ENABLE_MASK;
     clockStatus = RCC_AHB1ENR;
     (void)clockStatus;
 
@@ -38,20 +51,20 @@ static void initGPIO(void)
     GPIOE_BSRR = LED_PORT_E_MASK << 16;
 
     /* Настраиваем PD4-PD6 как выходы */
-    GPIOD_MODER = (GPIOD_MODER & ~0x00003F00UL) | 0x00001500UL;
+    GPIOD_MODER = (GPIOD_MODER & ~GPIOD_LED_FIELDS_MASK) | GPIOD_LED_OUTPUT_MODE;
     GPIOD_OTYPER &= ~LED_PORT_D_MASK;
-    GPIOD_OSPEEDR &= ~0x00003F00UL;
+    GPIOD_OSPEEDR &= ~GPIOD_LED_FIELDS_MASK;
     GPIOD_PUPDR &= ~0x00003F00UL;
 
     /* Настраиваем PE3-PE5 как выходы */
-    GPIOE_MODER = (GPIOE_MODER & ~0x00000FC0UL) | 0x00000540UL;
+    GPIOE_MODER = (GPIOE_MODER & ~GPIOE_LED_FIELDS_MASK) | GPIOE_LED_OUTPUT_MODE;
     GPIOE_OTYPER &= ~LED_PORT_E_MASK;
-    GPIOE_OSPEEDR &= ~0x00000FC0UL;
+    GPIOE_OSPEEDR &= ~GPIOE_LED_FIELDS_MASK;
     GPIOE_PUPDR &= ~0x00000FC0UL;
 
     /* Настраиваем PF6 и PF7 как входы с подтяжкой к питанию */
-    GPIOF_MODER &= ~0x0000F000UL;
-    GPIOF_PUPDR = (GPIOF_PUPDR & ~0x0000F000UL) | 0x00005000UL;
+    GPIOF_MODER &= ~GPIOF_BUTTON_FIELDS_MASK;
+    GPIOF_PUPDR = (GPIOF_PUPDR & ~GPIOF_BUTTON_FIELDS_MASK) | GPIOF_BUTTON_PULLUP;
 }
 
 static void setLeds(uint8_t ledCount)
