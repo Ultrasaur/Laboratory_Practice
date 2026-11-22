@@ -3,7 +3,6 @@
 #define LED_COUNT             6U
 #define BUTTON1_MASK          (1UL << 6)
 #define BUTTON2_MASK          (1UL << 7)
-#define BUTTON_MASK           (BUTTON1_MASK | BUTTON2_MASK)
 #define DEBOUNCE_TIME_MS      20U
 
 #define LED_PORT_D_MASK       0x70UL
